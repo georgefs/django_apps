@@ -13,7 +13,7 @@ STATUS_LIST = (
                 ('success', 'success'),
             )
 
-class Mapper_Model(models.Model):
+class MapperModel(models.Model):
     '''
     簡易的mapping model format
 

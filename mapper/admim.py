@@ -4,7 +4,7 @@ from django.template.response import TemplateResponse
 
 import abc
 
-def Admin(admin.ModelAdmin):
+def MapperAdmin(admin.ModelAdmin):
     __metaclass__ = abc.ABCMeta
     
     __error_template = "mapping/error.html"
