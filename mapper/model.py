@@ -19,12 +19,14 @@ class MapperModel(models.Model):
 
     定義簡單的 api 與 django db的簡單存取介面
     '''
+    class Meta:
+        abstract = True
     
-    __status = models.CharField( max_length = 100,
+    _status = models.CharField( max_length = 100,
                                 choices = STATUS_LIST,
-                                default = "unsend")
+                                default = "init")
     @property
-    def __api(self):
+    def _api(self):
         raise NotImplementedError("uncreate this function")
 
 
@@ -35,10 +37,10 @@ class MapperModel(models.Model):
         status = unsend & changed 則 不動作
         status = sended 則 修改狀態為 changed
         '''
-        if self.__status == "success":
-            self.__status = "changed"
+        if self._status == "success":
+            self._status = "changed"
 
-        super(Model, self).save()
+        super(MapperModel, self).save()
         pass
 #-----------------------------------------------
 
@@ -75,13 +77,13 @@ class MapperModel(models.Model):
         '''
         更新當前model 對應到的資料
         '''
-        update_api = self.__api.get('UPDATE')
+        update_api = self._api.get('UPDATE')
 
         data = self.format()
         
         result = self.send(update_api, data)
 
-        self.__status = "success"
+        self._status = "success"
 
         self.save()
 
@@ -92,13 +94,13 @@ class MapperModel(models.Model):
         將當前model 資料 新增到 api server
         '''
 
-        insert_api = self.__api.get('INSERT')
+        insert_api = self._api.get('INSERT')
 
         data = self.format()
         
         result = self.send(insert_api, data)
 
-        self.__status = "success"
+        self._status = "success"
 
         return result
 
@@ -107,13 +109,13 @@ class MapperModel(models.Model):
         '''
         刪除當前model 對應到的資料
         '''
-        remove_api = self.__api.get('REMOVE')
+        remove_api = self._api.get('REMOVE')
 
         data = self.format()
         
         result = self.send(remove_api, data)
         
-        self.__status = "init"
+        self._status = "init"
             
         
         
