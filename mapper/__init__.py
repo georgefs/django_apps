@@ -1,6 +1,6 @@
-from django.conf import setting 
-import setting as my_setting
+from django.conf import settings
+import settings as my_settings
 
 
 
-setting.update(my_setting)
+#settings.update(my_settings)

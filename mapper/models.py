@@ -11,22 +11,24 @@ STATUS_LIST = (
                 ('init', 'init'),
                 ('changed', 'changed'),
                 ('success', 'success'),
-                )
+            )
 
-def Model(models.Model):
+class Mapper_Model(models.Model):
     '''
     簡易的mapping model format
 
     定義簡單的 api 與 django db的簡單存取介面
     '''
-    __metaclass__ = abc.ABCMeta
     
     __status = models.CharField( max_length = 100,
                                 choices = STATUS_LIST,
                                 default = "unsend")
-    
-    __api = abc.abstractproperty()
-    
+    @property
+    def __api(self):
+        raise NotImplementedError("uncreate this function")
+
+
+
     def save(self, *args, **kwargv):
         '''
         定義 model 寫入時動作
@@ -40,18 +42,17 @@ def Model(models.Model):
         pass
 #-----------------------------------------------
 
-    @abc.abstractmethod
     def format(self):
         '''
         model 轉 api data 格式
         '''
+        raise NotImplementedError("uncreate this function")
 
-    @abc.abstractmethod
     def unformat(self):
         '''
         api 資料 轉model 格式
         '''
-        pass
+        raise NotImplementedError("uncreate this function")
 
     def sync(self):
         '''
@@ -60,7 +61,6 @@ def Model(models.Model):
         raise NotImplementedError("uncreate this function")
 #------------------------------------------------
 
-    @staticmethod
     def send(api, data):
 
         data = urllib.urlencode(data)
