@@ -9,7 +9,7 @@ def base_view(view):
         try:
             return view(self, request, *args)
         except Exception, e:
-            return TemplateResponse(request, self._error_view , e)
+            return TemplateResponse(request, self._error_template , {"msg":e.message })
 
     return base
 
@@ -19,7 +19,7 @@ class MapperAdmin(admin.ModelAdmin):
     _insert_template = "mapping/insert.html"
     _update_template = "mapping/update.html"
     _remove_template = "mapping/remove.html"
-    #change_form_template = "mapping/mapping_change_from.html"
+    change_form_template = "mapping/mapping_change_from.html"
 
     def __init__(self, *args):
         self.readonly_fields += ("_status", )
@@ -41,23 +41,19 @@ class MapperAdmin(admin.ModelAdmin):
 
     @base_view
     def update_view(self, request, pk):
-        data = self.get_date(pk)
-        assert data._status == "changed", 'not changed'
-        result = self.model.update(pk)
+        result = self.model.objects.get(pk=pk).update()
 
         return TemplateResponse(request, self._update_template, result)
 
     @base_view
     def insert_view(self, request, pk):
-        assert data._status == "init", "inserted"
-        result = self.model.insert(pk)
+        result = self.model.objects.get(pk=pk).insert()
 
         return TemplateResponse(request, self._insert_template, result)
 
     @base_view
     def remove_view(self, request, pk):
-        assert data._status != "init", "can't remove"
-        result = self.model.remove(pk)
+        result = self.model.objects.get(pk=pk).remove()
 
         return TemplateResponse(request, self._remove_template, result)
        

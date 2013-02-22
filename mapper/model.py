@@ -31,7 +31,7 @@ class MapperModel(models.Model):
 
 
 
-    def save(self, *args, **kwargv):
+    def save(self, status_enforce=None, *args, **kwargs):
         '''
         定義 model 寫入時動作
         status = unsend & changed 則 不動作
@@ -40,7 +40,10 @@ class MapperModel(models.Model):
         if self._status == "success":
             self._status = "changed"
 
-        super(MapperModel, self).save()
+        if status_enforce:
+            self._status = status_enforce
+
+        super(MapperModel, self).save(*args, **kwargs)
         pass
 #-----------------------------------------------
 
@@ -56,36 +59,50 @@ class MapperModel(models.Model):
         '''
         raise NotImplementedError("uncreate this function")
 
+    def get_all(self):
+        '''
+        從api server 擷取全部
+        '''
+        raise NotImplementedError("uncreate this function")
+
     def sync(self):
         '''
         資料同步處理, 可選..
         '''
-        raise NotImplementedError("uncreate this function")
+        #self.__class__.clean()
+        self.__class__.objects.all().delete()
+        for data in self.get_all():
+            data = self.unformat(data)
+            mod = self.__class__.objects.create(**data)
+            mod.save(status_enforce="success")
+
 #------------------------------------------------
 
-    def send(api, data):
-
+    def send(self, api, data):
+        data.update(self._api.BASE_PARAMS)
         data = urllib.urlencode(data)
         req = urllib2.Request(
                     url = api,
                     data = data,
                 )
-        return urllib2.urlopen(req)
+        return urllib2.urlopen(req).read()
 
 
     def update(self):
         '''
         更新當前model 對應到的資料
         '''
-        update_api = self._api.get('UPDATE')
+        assert self._status == "changed", 'not changed'
+
+        update_api = self._api.UPDATE
 
         data = self.format()
         
         result = self.send(update_api, data)
 
-        self._status = "success"
+        self.save(status_enforce = "success")
 
-        self.save()
+        return result
 
         
 
@@ -93,14 +110,18 @@ class MapperModel(models.Model):
         '''
         將當前model 資料 新增到 api server
         '''
+        assert self._status == "init", "always inserted"
 
-        insert_api = self._api.get('INSERT')
+        insert_api = self._api.INSERT
 
         data = self.format()
         
         result = self.send(insert_api, data)
 
-        self._status = "success"
+        data = self.unformat(result)
+
+        self.__dict__.update(data)
+        self.save(status_enforce = "success")
 
         return result
 
@@ -109,14 +130,17 @@ class MapperModel(models.Model):
         '''
         刪除當前model 對應到的資料
         '''
-        remove_api = self._api.get('REMOVE')
+        assert self._status != "init", "not inserted"
+
+        remove_api = self._api.REMOVE
 
         data = self.format()
         
         result = self.send(remove_api, data)
         
-        self._status = "init"
-            
+        self.save(status_enforce = "init") 
+
+        return result
         
         
 
