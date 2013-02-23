@@ -2,7 +2,6 @@
 import abc
 
 from django.db import models
-from settings import API
 import urllib, urllib2
 
 # Create your models here.
@@ -44,7 +43,6 @@ class MapperModel(models.Model):
             self._status = status_enforce
 
         super(MapperModel, self).save(*args, **kwargs)
-        pass
 #-----------------------------------------------
 
     def format(self):
@@ -78,7 +76,7 @@ class MapperModel(models.Model):
 
 #------------------------------------------------
 
-    def send(self, api, data):
+    def send(self, api, data={}):
         data.update(self._api.BASE_PARAMS)
         data = urllib.urlencode(data)
         req = urllib2.Request(
